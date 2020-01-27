@@ -1,0 +1,11 @@
+{
+  "name": "cinestar-digest",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node ."
+  },
+  "dependencies": {
+    "fs-extra": "^8.1.0",
+    "puppeteer": "^2.1.0"
+  }
+}
