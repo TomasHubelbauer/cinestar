@@ -9,7 +9,7 @@ catch (error) {
 }
 
 void async function () {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch();
   const [page] = await browser.pages();
   await page.goto('https://www.cinestar.cz/cz/praha9/program');
 
