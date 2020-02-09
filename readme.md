@@ -2,7 +2,7 @@
 
 ## Running
 
-`node .` creates `titles.lst`
+`node .` creates `titles.json`
 
 ## To-Do
 
