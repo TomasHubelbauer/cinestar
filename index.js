@@ -1,15 +1,10 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
-let email;
-try {
-  email = require('../self-email');
-}
-catch (error) {
-  // Ignore missing email dependency on systems which don't have it
-}
+const email = require('../self-email');
+const headers = require('../self-email/headers');
 
 module.exports = async function () {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ headless: false });
   const [page] = await browser.pages();
   await page.goto('https://www.cinestar.cz/cz/praha9/program');
 
@@ -60,21 +55,11 @@ module.exports = async function () {
         if (!exists) {
           console.log('\t\t', name, '[NEW]');
           titles.push({ name, posterUrl, date });
-          if (email) {
-            false && await email(`
-From: CineStar Digest <bot@hubelbauer.net>
-To: tomas@hubelbauer.net
-Subject: CineStar premiere: "${name}"
-Content-Type: text/html
-
-<p>
-CineStar premieres "${name}" at ${date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}!
-</p>
-<img src="${posterUrl}" />
-<br />
-Thanks!
-`);
-          }
+          await email(
+            headers('CineStar', name),
+            `<p>${name} premieres at ${date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}!</p>`,
+            'Thank you'
+          );
         }
         else {
           console.log('\t\t', name);
@@ -86,29 +71,22 @@ Thanks!
   await fs.writeJson('titles.json', titles, { spaces: 2 });
   await browser.close();
 
-  if (email) {
-    // Check out what movies screen tonight and notify about those
-    const today = new Date();
-    /** @type {Title[]} */
-    const tonight = [];
-    for (const title of titles) {
-      if (title.date.getFullYear() === today.getFullYear() && title.date.getMonth() === today.getMonth() && title.date.getDate() === today.getDate()) {
-        tonight.push(title);
-      }
+  // Check out what movies screen tonight and notify about those
+  const today = new Date();
+  /** @type {Title[]} */
+  const tonight = [];
+  for (const title of titles) {
+    if (title.date.getFullYear() === today.getFullYear() && title.date.getMonth() === today.getMonth() && title.date.getDate() === today.getDate()) {
+      tonight.push(title);
     }
-
-    await email(`
-From: CineStar Screenings Tonight <bot@hubelbauer.net>
-To: Tomas Hubelbauer <tomas@hubelbauer.net>
-Subject: ${tonight.map(t => t.name).join(', ')}
-Content-Type: text/html
-
-<p>CineStar screens ${tonight.length} titles tonight!</p>
-${tonight.map(t => `<p>${t.name}</p>\n<img src="${t.posterUrl}" />\n`).join('')}
-
-<p>Thanks!</p>
-`);
   }
+
+  await email(
+    headers('CineStar Tonight', tonight.map(t => t.name).join(', ')),
+    `<p>CineStar screens ${tonight.length} titles tonight!</p>`,
+    ...tonight.map(t => `<p>${t.name}</p>\n<img src="${t.posterUrl}" />`),
+    'Thank you'
+  );
 };
 
 module.exports();
