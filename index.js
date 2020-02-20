@@ -89,4 +89,4 @@ module.exports = async function () {
   );
 };
 
-module.exports();
+module.exports = module.exports();
