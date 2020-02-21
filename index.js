@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const email = require('../self-email');
 const headers = require('../self-email/headers');
+const footer = require('../self-email/footer');
 
 module.exports = async function () {
   const browser = await puppeteer.launch({ headless: false });
@@ -56,9 +57,9 @@ module.exports = async function () {
           console.log('\t\t', name, '[NEW]');
           titles.push({ name, posterUrl, date });
           await email(
-            headers('CineStar', name),
+            headers(name, 'CineStar'),
             `<p>${name} premieres at ${date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}!</p>`,
-            'Thank you'
+            ...footer('CineStar')
           );
         }
         else {
@@ -82,10 +83,10 @@ module.exports = async function () {
   }
 
   await email(
-    headers('CineStar Tonight', tonight.map(t => t.name).join(', ')),
+    headers(tonight.map(t => t.name).join(', '), 'CineStar Tonight'),
     `<p>CineStar screens ${tonight.length} titles tonight!</p>`,
     ...tonight.map(t => `<p>${t.name}</p>\n<img src="${t.posterUrl}" />`),
-    'Thank you'
+    ...footer('CineStar Tonight')
   );
 };
 
