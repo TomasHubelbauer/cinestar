@@ -84,8 +84,15 @@ module.exports = async function () {
 
   await email(
     headers(tonight.map(t => t.name).join(', '), 'CineStar Tonight'),
-    `<p>CineStar screens ${tonight.length} titles tonight!</p>`,
-    ...tonight.map(t => `<p>${t.name}</p>\n<img src="${t.posterUrl}" />`),
+    ...(tonight.length === 0
+      ? [
+        `<p>CineStar doesn't screen any titles tonight.</p>`
+      ]
+      : [
+        `<p>CineStar screens ${tonight.length} titles tonight!</p>`,
+        ...tonight.map(t => `<p>${t.name}</p>\n<img src="${t.posterUrl}" />`),
+      ]
+    ),
     ...footer('CineStar Tonight')
   );
 };
