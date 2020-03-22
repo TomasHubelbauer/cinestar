@@ -1,8 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const email = require('../self-email');
-const headers = require('../self-email/headers');
-const footer = require('../self-email/footer');
+const { eml, subject, sender, recipient } = require('../self-email');
 
 module.exports = async function () {
   const browser = await puppeteer.launch({ headless: false });
@@ -57,9 +56,12 @@ module.exports = async function () {
           console.log('\t\t', name, '[NEW]');
           titles.push({ name, posterUrl, date });
           await email(
-            headers(name, 'CineStar'),
-            `<p>${name} premieres at ${date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}!</p>`,
-            ...footer('CineStar')
+            eml(
+              subject(name),
+              sender('Cinestar <bot+cinestar@hubelbauer.net>'),
+              recipient('Tomas Hubelbauer <tomas@hubelbauer.net>'),
+              `<p>${name} premieres at ${date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}!</p>`,
+            )
           );
         }
         else {
@@ -83,17 +85,20 @@ module.exports = async function () {
   }
 
   await email(
-    headers(tonight.map(t => t.name).join(', '), 'CineStar Tonight'),
-    ...(tonight.length === 0
-      ? [
-        `<p>CineStar doesn't screen any titles tonight.</p>`
-      ]
-      : [
-        `<p>CineStar screens ${tonight.length} titles tonight!</p>`,
-        ...tonight.map(t => `<p>${t.name}</p>\n<img src="${t.posterUrl}" />`),
-      ]
-    ),
-    ...footer('CineStar Tonight')
+    eml(
+      subject(tonight.map(t => t.name).join(', ')),
+      sender('Cinestar <bot+cinestar@hubelbauer.net>'),
+      recipient('Tomas Hubelbauer <tomas@hubelbauer.net>'),
+      ...(tonight.length === 0
+        ? [
+          `<p>CineStar doesn't screen any titles tonight.</p>`
+        ]
+        : [
+          `<p>CineStar screens ${tonight.length} titles tonight!</p>`,
+          ...tonight.map(t => `<p>${t.name}</p>\n<img src="${t.posterUrl}" />`),
+        ]
+      ),
+    )
   );
 };
 
