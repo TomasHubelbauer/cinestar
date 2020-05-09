@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
+const path = require('path');
 const email = require('../self-email');
 const { eml, subject, sender, recipient } = require('../self-email');
 
@@ -10,10 +11,12 @@ module.exports = async function () {
 
   /** @typedef {{ name: string; posterUrl: string; date: Date; }} Title */
 
+  const titlesJsonFilePath = path.join(__dirname, 'titles.json');
+
   /** @type {Title[]} */
   const titles = [];
   try {
-    titles.push(...await fs.readJson('titles.json'));
+    titles.push(...await fs.readJson(titlesJsonFilePath));
     for (const title of titles) {
       // Parse string dates from storage to runtime `Date` object instance representation
       title.date = new Date(title.date);
@@ -71,7 +74,7 @@ module.exports = async function () {
     }
   }
 
-  await fs.writeJson('titles.json', titles, { spaces: 2 });
+  await fs.writeJson(titlesJsonFilePath, titles, { spaces: 2 });
   await browser.close();
 
   // Check out what movies screen tonight and notify about those
@@ -100,6 +103,12 @@ module.exports = async function () {
       ),
     )
   );
+
+  return `${tonight.length} titles tonight`;
 };
 
-module.exports = module.exports();
+if (process.cwd() === __dirname) {
+  void async function () {
+    module.exports();
+  }()
+}
